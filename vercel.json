@@ -5,7 +5,12 @@
       "src": "server.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["dist/**", "public/**", "data/**"]
+        "includeFiles": [
+          "dist/**", 
+          "public/**", 
+          "data/**",
+          "node_modules/sql.js/dist/sql-wasm.wasm"
+        ]
       }
     }
   ],
