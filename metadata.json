@@ -1,0 +1,7 @@
+{
+  "name": "Cutline Studio - Freelance Order, Billing & Team Manager",
+  "description": "Video editing and social media management client portal, order intake, freelancer task delegation, and billing manager.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

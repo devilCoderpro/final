@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#db2777" />
+    </linearGradient>
+    <linearGradient id="cutGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background rounded rect -->
+  <rect width="512" height="512" rx="112" fill="#090d16" />
+  
+  <!-- Subtle inner gradient boundary -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="url(#bgGrad)" stroke-width="4" opacity="0.4" />
+
+  <!-- Center Card -->
+  <rect x="76" y="76" width="360" height="360" rx="72" fill="url(#bgGrad)" filter="url(#glow)" />
+
+  <!-- Video Camera & Cutline Play glyph -->
+  <!-- Main Body -->
+  <rect x="136" y="156" width="168" height="200" rx="28" fill="#ffffff" />
+  
+  <!-- Camera lens triangle right -->
+  <path d="M 334 204 L 386 166 C 392 162 400 166 400 174 L 400 338 C 400 346 392 350 386 346 L 334 308 Z" fill="#ffffff" />
+
+  <!-- Play Cut Symbol inside camera -->
+  <polygon points="196,212 264,256 196,300" fill="#4f46e5" />
+
+  <!-- Cutline laser slit -->
+  <line x1="120" y1="360" x2="392" y2="152" stroke="url(#cutGrad)" stroke-width="8" stroke-linecap="round" opacity="0.9" />
+</svg>
