@@ -13,12 +13,9 @@ process.env.DISABLE_HMR = 'true';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function startServer() {
-  const app = express();
-  const server = http.createServer(app);
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  const isDev = process.env.NODE_ENV !== 'production';
+const app = express();
 
+async function configureApp() {
   // Security Headers
   app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -39,8 +36,7 @@ async function startServer() {
       if (origin && host) {
         try {
           const originHost = new URL(origin).host;
-          // allow same host or local/dev environments
-          if (originHost !== host && !originHost.includes('localhost') && !originHost.includes('127.0.0.1') && !originHost.includes('run.app')) {
+          if (originHost !== host && !originHost.includes('localhost') && !originHost.includes('127.0.0.1') && !originHost.includes('run.app') && !originHost.includes('vercel.app')) {
             res.status(403).json({ error: 'Cross-site request blocked.' });
             return;
           }
@@ -56,11 +52,15 @@ async function startServer() {
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));
   app.use(cookieParser());
 
-  // Ensure transaction proofs storage directories exist
+  // Ensure transaction proofs storage directories exist (Vercel has /tmp for write, but we handle conditionally)
   const proofsDir = path.resolve(process.cwd(), 'data', 'transaction_proofs');
   const altProofsDir = path.resolve(process.cwd(), 'data', 'transaction proofs');
-  if (!fs.existsSync(proofsDir)) fs.mkdirSync(proofsDir, { recursive: true });
-  if (!fs.existsSync(altProofsDir)) fs.mkdirSync(altProofsDir, { recursive: true });
+  try {
+    if (!fs.existsSync(proofsDir)) fs.mkdirSync(proofsDir, { recursive: true });
+    if (!fs.existsSync(altProofsDir)) fs.mkdirSync(altProofsDir, { recursive: true });
+  } catch (e) {
+    // Vercel serverless has a read-only filesystem except for /tmp, ignore folder creation crash on cloud
+  }
 
   // Serve transaction proofs
   app.use('/transaction_proofs', express.static(proofsDir));
@@ -70,7 +70,7 @@ async function startServer() {
   // Initialize DB
   await getDb();
 
-  // Direct project zip download endpoints with forced attachment headers
+  // Direct project zip download endpoints
   const serveProjectZip = (_req: express.Request, res: express.Response) => {
     const zipPath = path.resolve(process.cwd(), 'public', 'cutline-studio-project.zip');
     if (fs.existsSync(zipPath)) {
@@ -89,37 +89,30 @@ async function startServer() {
 
   // Mount API routes
   app.use('/api', apiRouter);
+}
 
-  if (isDev) {
+// Initialize the routes immediately for Vercel Serverless environment
+configureApp().catch(err => console.error('[Cutline Studio] Config error:', err));
+
+// Only run standard server.listen and Vite Middleware if NOT on Vercel production
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  const startLocalServer = async () => {
+    const server = http.createServer(app);
+    const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+    
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: {
-        middlewareMode: true,
-        hmr: process.env.DISABLE_HMR === 'true'
-          ? false
-          : {
-              server,
-            },
-      },
+      server: { middlewareMode: true, hmr: false },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.resolve(__dirname, 'dist');
-    if (fs.existsSync(distPath)) {
-      app.use(express.static(distPath));
-      app.get('*', (req, res) => {
-        res.sendFile(path.join(distPath, 'index.html'));
-      });
-    }
-  }
 
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Cutline Studio] Server running on http://0.0.0.0:${PORT} (env: ${process.env.NODE_ENV || 'development'})`);
-  });
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`[Cutline Studio] Local Server running on http://0.0.0.0:${PORT}`);
+    });
+  };
+  startLocalServer();
 }
 
-startServer().catch(err => {
-  console.error('[Cutline Studio] Startup error:', err);
-  process.exit(1);
-});
+// Export app for Vercel Serverless Functions
+export default app;
