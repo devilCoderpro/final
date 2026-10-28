@@ -2,22 +2,17 @@
   "version": 2,
   "builds": [
     {
-      "src": "vite.config.ts",
-      "use": "@vercel/vite"
-    },
-    {
       "src": "server.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["dist/**", "public/**", "data/**"]
+      }
     }
   ],
   "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "server.ts"
-    },
-    {
       "source": "/(.*)",
-      "destination": "index.html"
+      "destination": "server.ts"
     }
   ]
 }
